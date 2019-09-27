@@ -3,82 +3,40 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\User;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function init()
     {
-        //
+        $user = Auth::user();
+        return response()->json($user, 200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function register(Request $request)
     {
-        //
+        $request->validate([
+            'name'=>'required|min:3|max:255',
+            'email'=>'required|unique:users,email|min:5|max:255',
+            'password'=>'required|min:3',
+        ]);
+        $data = $request->all();
+        $data['password'] = bcrypt($request->password);
+        $user = $this->create($data);
+        Auth::login($user);
+        return response()->json($user, 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
+    public function login(Request $request) {
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            return response()->json(Auth::user(), 200);
+        } else {
+            return response()->json(['error'=>'Could not login'], 401);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+    public function logout() {
+        Auth::logout();
     }
 }
